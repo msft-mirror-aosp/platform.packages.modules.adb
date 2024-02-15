@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,9 @@
 
 #pragma once
 
-#include <optional>
-#include <string>
+#include <sys/socket.h>
+#include <sys/un.h>
 
-#include "adb.h"
+#include <tuple>
 
-#if ADB_HOST
-
-void adb_wifi_pair_device(const std::string& host, const std::string& password,
-                          std::string& response);
-bool adb_wifi_is_known_host(const std::string& host);
-
-#else  // !ADB_HOST
-
-struct AdbdAuthContext;
-
-void adbd_wifi_init(AdbdAuthContext* ctx);
-void adbd_wifi_secure_connect(atransport* t);
-
-#endif
+std::tuple<sockaddr_un, socklen_t> get_control_socket_addr();
