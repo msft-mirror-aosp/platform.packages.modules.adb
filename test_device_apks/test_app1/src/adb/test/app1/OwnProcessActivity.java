@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-#pragma once
+package adb.test.app1;
 
-#include <stdint.h>
-#include <sys/types.h>
+import android.app.Activity;
+import android.os.Bundle;
+import android.widget.TextView;
 
-extern "C" {
-// Thin wrapper around libcutils get_fs_config.
-void adbd_fs_config(const char* path, int dir, const char* target_out_path, uid_t* uid, gid_t* gid,
-                    mode_t* mode, uint64_t* capabilities);
+public class OwnProcessActivity extends Activity
+{
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        TextView label = new TextView(this);
+        label.setText("I am OwnProcessActivity!");
+
+        setContentView(label);
+    }
 }
