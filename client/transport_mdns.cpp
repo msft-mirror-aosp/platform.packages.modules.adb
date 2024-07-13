@@ -137,6 +137,12 @@ std::optional<discovery::Config> GetConfigForAllInterfaces() {
     auto interface_infos = GetNetworkInterfaces();
 
     discovery::Config config;
+
+    // The host only consumes mDNS traffic. It doesn't publish anything.
+    // Avoid creating an mDNSResponder that will listen with authority
+    // to answer over no domain.
+    config.enable_publication = false;
+
     for (const auto interface : interface_infos) {
         if (interface.GetIpAddressV4() || interface.GetIpAddressV6()) {
             config.network_info.push_back({interface});
