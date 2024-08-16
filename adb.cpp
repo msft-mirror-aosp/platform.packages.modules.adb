@@ -140,6 +140,8 @@ std::string to_string(ConnectionState state) {
             return "authorizing";
         case kCsConnecting:
             return "connecting";
+        case kCsDetached:
+            return "detached";
         default:
             return "unknown";
     }
@@ -1327,7 +1329,7 @@ HostRequestResult handle_host_request(std::string_view service, TransportType ty
 
     if (service == "server-status") {
         adb::proto::AdbServerStatus status;
-        if (should_use_libusb()) {
+        if (is_libusb_enabled()) {
             status.set_usb_backend(adb::proto::AdbServerStatus::LIBUSB);
         } else {
             status.set_usb_backend(adb::proto::AdbServerStatus::NATIVE);
@@ -1400,7 +1402,7 @@ HostRequestResult handle_host_request(std::string_view service, TransportType ty
     if (service == "host-features") {
         FeatureSet features = supported_features();
         // Abuse features to report libusb status.
-        if (should_use_libusb()) {
+        if (is_libusb_enabled()) {
             features.emplace_back(kFeatureLibusb);
         }
         features.emplace_back(kFeaturePushSync);
