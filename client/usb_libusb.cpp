@@ -724,7 +724,6 @@ struct LibusbConnection : public Connection {
             });
 
             incoming_header_.reset();
-            incoming_payload_.clear();
         }
 
         if (device_handle_) {
@@ -878,7 +877,6 @@ struct LibusbConnection : public Connection {
     ReadBlock header_read_ GUARDED_BY(read_mutex_);
     ReadBlock payload_read_ GUARDED_BY(read_mutex_);
     std::optional<amessage> incoming_header_ GUARDED_BY(read_mutex_);
-    IOVector incoming_payload_ GUARDED_BY(read_mutex_);
 
     std::mutex write_mutex_;
     std::unordered_map<TransferId, std::unique_ptr<WriteBlock>> writes_ GUARDED_BY(write_mutex_);
