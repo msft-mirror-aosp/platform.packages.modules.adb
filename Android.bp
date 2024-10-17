@@ -992,17 +992,11 @@ python_test_host {
 
 // Note: using pipe for xxd to control the variable name generated
 // the default name used by xxd is the path to the input file.
-cc_genrule {
+java_genrule {
     name: "bin2c_fastdeployagent",
     out: ["deployagent.inc"],
     srcs: [":deployagent"],
     cmd: "(echo 'unsigned char kDeployAgent[] = {' && xxd -i <$(in) && echo '};') > $(out)",
-    host_supported: true,
-    target: {
-        windows: {
-            enabled: true,
-        },
-    },
 }
 
 genrule {
