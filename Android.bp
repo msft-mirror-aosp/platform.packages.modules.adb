@@ -432,7 +432,7 @@ cc_defaults {
         "shell_service_protocol.cpp",
     ],
 
-    generated_headers: [
+    device_first_generated_headers: [
         "bin2c_fastdeployagent",
         "bin2c_fastdeployagentscript",
     ],
@@ -984,7 +984,7 @@ python_test_host {
     test_options: {
         unit_test: false,
     },
-    data: [
+    device_common_data: [
         ":adb_test_app1",
         ":adb_test_app2",
     ],
