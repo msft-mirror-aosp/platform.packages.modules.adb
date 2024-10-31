@@ -1844,6 +1844,16 @@ class DevicesListing(DeviceTest):
 
             proc.terminate()
 
+def invoke(*args):
+    print(args)
+    try:
+        output = subprocess.check_output(args, stderr=subprocess.STDOUT).strip().decode("utf-8")
+        print(output)
+        return output
+    except subprocess.CalledProcessError as e:
+        return "ErrorCode " + str(e.returncode) + ":" + e.output.decode("utf-8")
+
+
 class DevicesListing(DeviceTest):
 
     def test_track_app_appinfo(self):
@@ -1888,8 +1898,145 @@ class ServerStatus(unittest.TestCase):
             self.assertTrue("executable_absolute_path" in lines[4])
             self.assertTrue("log_absolute_path" in lines[5])
 
-def invoke(*args):
-    return subprocess.check_output(args).strip().decode("utf-8")
+
+class DetachSingleServer(unittest.TestCase):
+    serial = invoke("adb", "get-serialno")
+
+    def wait_for_device(self):
+        count = 0
+        while True:
+            devices = invoke("adb", "devices")
+            if (self.serial in devices and "attached" in devices):
+                return
+            count = count + 1
+            if count > 10:
+                return
+
+    def test_detach_then_attach(self):
+        # Check device is there with comm working
+        who = invoke("adb", "shell", "whoami")
+        self.assertTrue(who == "shell" or who == "root")
+        devices = invoke("adb", "devices")
+        self.assertFalse("detached" in devices, devices)
+        self.assertTrue(self.serial in devices, devices)
+
+        invoke("adb", "detach")
+
+        # Verify detach did not remove the device from list
+        devices = invoke("adb", "devices")
+        self.assertTrue(self.serial in devices, devices)
+        self.assertTrue("detached" in devices, devices)
+
+        # Verify detach makes device unreachable
+        who = invoke("adb", "shell", "whoami")
+        self.assertFalse(who == "shell" or who == "root", who)
+
+        # Re-attach
+        invoke("adb", "attach")
+        time.sleep(2)
+        self.wait_for_device()
+
+        # Check devices is there
+        devices = invoke("adb", "devices")
+        self.assertTrue(self.serial in devices, devices)
+        self.assertFalse("detached" in devices, devices)
+
+        # Check device comm was started
+        who = invoke("adb", "shell", "whoami")
+        self.assertTrue(who == "shell" or who == "root", who)
+
+    def tearDown(self):
+        invoke("adb", "kill-server")
+
+class DetachMultiServer(unittest.TestCase):
+    server1_port = "5038"
+    server2_port = "5039"
+    env_var_detached = "ADB_LIBUSB_START_DETACHED"
+    serial = invoke("adb", "get-serialno")
+
+    def wait_for_device(self, server_id):
+        count = 0
+        while True:
+            devices = invoke("adb", "-P", server_id, "devices")
+            if (self.serial in devices and "attached" in devices):
+                return
+            count = count + 1
+            if count > 10:
+                return
+
+    def test_device_exchange(self):
+       # Enable once we support invoke with env variable
+       return
+       # Start two "detached" servers with ADB_LIBUSB_START_DETACHED
+       # Attach device to server 1, test it.
+       # Detach device from server 1.
+       # Attach device to server 2. test it.
+
+       # Make sure everything is clean
+       invoke("adb", "-P", self.server1_port, "start-server")
+       invoke("adb", "-P", self.server2_port, "start-server")
+
+       # Make sure server1 sees device as detached
+       devices1= invoke("adb", "-P", self.server1_port, "devices")
+       self.assertTrue("detached" in devices1)
+       self.assertTrue(self.serial in devices1)
+
+       # Make sure server2 sees device as detached
+       devices2= invoke("adb", "-P", self.server2_port, "devices")
+       self.assertTrue("detached" in devices2)
+       self.assertTrue(self.serial in devices2)
+
+       # Attach device to server 1. Verify.
+       invoke("adb", "-P", self.server1_port, "attach")
+       time.sleep(4)
+       self.wait_for_device(self.server1_port)
+
+       devices1= invoke("adb", "-P", self.server1_port, "devices")
+       self.assertFalse("detached" in devices1)
+       self.assertTrue(self.serial in devices1)
+
+       # Make sure server 1 can comm with device
+       who = invoke("adb", "-P", self.server1_port, "shell", "whoami")
+       self.assertTrue(who == "shell" or who == "root")
+
+       # Now detach and make sure device cannot comm
+       invoke("adb", "-P", self.server1_port, "detach")
+       who = invoke("adb", "-P", self.server1_port, "shell", "whoami")
+       self.assertFalse(who == "shell" or who == "root")
+       devices1= invoke("adb", "-P", self.server1_port, "devices")
+       self.assertTrue("detached" in devices1)
+       self.assertTrue(self.serial in devices1)
+
+       # Give device to server2
+       invoke("adb", "-P", self.server2_port, "attach")
+       time.sleep(2)
+       self.wait_for_device(self.server2_port)
+       devices2= invoke("adb", "-P", self.server2_port, "devices")
+       self.assertFalse("detached" in devices2)
+       self.assertTrue(self.serial in devices2)
+
+       # Test that sever2 can comm with device
+       who = invoke("adb", "-P", self.server2_port, "shell", "whoami")
+       self.assertTrue(who == "shell" or who == "root")
+
+       # Detach device from server2. Verify.
+       invoke("adb", "-P", self.server2_port, "detach")
+       devices2= invoke("adb", "-P", self.server2_port, "devices")
+       self.assertTrue("detached" in devices2)
+       self.assertTrue(self.serial in devices2)
+
+       # Verify server2 cannot comm with device
+       who = invoke("adb", "-P", self.server2_port, "shell", "whoami")
+       self.assertFalse(who == "shell" or who == "root")
+
+    def setUp(self):
+       os.environ[self.env_var_detached] = "1"
+       invoke("adb", "kill-server")
+
+    def tearDown(self):
+       invoke("adb", "-P", self.server1_port, "kill-server")
+       invoke("adb", "-P", self.server2_port, "kill-server")
+       del os.environ[self.env_var_detached]
 
 class OneDevice(unittest.TestCase):
 
