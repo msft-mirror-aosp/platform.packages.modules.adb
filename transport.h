@@ -513,8 +513,11 @@ void unregister_usb_transport(usb_handle* usb);
 /* Connect to a network address and register it as a device */
 void connect_device(const std::string& address, std::string* response);
 
+/* initialize a transport object's func pointers and state */
+int init_socket_transport(atransport* t, unique_fd s, int port, bool is_emulator);
+
 /* cause new transports to be init'd and added to the list */
-bool register_socket_transport(unique_fd s, std::string serial, int port, int local,
+bool register_socket_transport(unique_fd s, std::string serial, int port, bool is_emulator,
                                atransport::ReconnectCallback reconnect, bool use_tls,
                                int* error = nullptr);
 
@@ -529,12 +532,6 @@ void send_packet(apacket* p, atransport* t);
 enum TrackerOutputType { SHORT_TEXT, LONG_TEXT, PROTOBUF, TEXT_PROTOBUF };
 asocket* create_device_tracker(TrackerOutputType type);
 std::string list_transports(TrackerOutputType type);
-#endif
-
-#if !ADB_HOST
-unique_fd adb_listen(std::string_view addr, std::string* error);
-void server_socket_thread(std::function<unique_fd(std::string_view, std::string*)> listen_func,
-                          std::string_view addr);
 #endif
 
 #endif /* __TRANSPORT_H */
