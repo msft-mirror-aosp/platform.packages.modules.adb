@@ -550,7 +550,6 @@ void handle_packet(apacket *p, atransport *t)
                     s->peer->peer = s;
 
                     local_socket_ack(s, acked_bytes);
-                    s->ready(s);
                 } else if (s->peer->id == p->msg.arg0) {
                     /* Other READY messages must use the same local-id */
                     local_socket_ack(s, acked_bytes);
@@ -1498,7 +1497,7 @@ HostRequestResult handle_host_request(std::string_view service, TransportType ty
         if (!ParseUint(&port, service)) {
           LOG(ERROR) << "received invalid port for emulator: " << service;
         } else {
-          local_connect(port);
+            connect_emulator(port);
         }
 
         /* we don't even need to send a reply */
