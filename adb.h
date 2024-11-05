@@ -108,8 +108,8 @@ enum ConnectionState {
     kCsAuthorizing,     // Authorizing with keys from ADB_VENDOR_KEYS.
     kCsUnauthorized,    // ADB_VENDOR_KEYS exhausted, fell back to user prompt.
     kCsNoPerm,          // Insufficient permissions to communicate with the device.
-    kCsDetached,        // USB device that's detached from the adb server.
-    kCsOffline,
+    kCsDetached,        // USB device detached from the adb server (known but not opened/claimed).
+    kCsOffline,         // A peer has been detected (device/host) but no comm has started yet.
 
     // After CNXN packet, the ConnectionState describes not a state but the type of service
     // on the other end of the transport.
@@ -145,9 +145,6 @@ bool is_one_device_mandatory();
 int launch_server(const std::string& socket_spec, const char* one_device);
 int adb_server_main(int is_daemon, const std::string& socket_spec, const char* one_device,
                     int ack_reply_fd);
-
-/* initialize a transport object's func pointers and state */
-int init_socket_transport(atransport* t, unique_fd s, int port, int local);
 
 std::string getEmulatorSerialString(int console_port);
 #if ADB_HOST
@@ -200,9 +197,8 @@ void put_apacket(apacket* p);
 #define ADB_DBC_CLASS 0xDC
 #define ADB_DBC_SUBCLASS 0x2
 
-void local_init(const std::string& addr);
-bool local_connect(int port);
-int local_connect_arbitrary_ports(int console_port, int adb_port, std::string* error);
+bool connect_emulator(int port);
+int connect_emulator_arbitrary_ports(int console_port, int adb_port, std::string* error);
 
 extern const char* adb_device_banner;
 
