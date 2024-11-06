@@ -776,7 +776,7 @@ static void usb_ffs_open_thread() {
             LOG(INFO) << "resuming USB";
         }
 
-        atransport* transport = new atransport();
+        atransport* transport = new atransport(kTransportUsb);
         transport->serial = "UsbFfs";
         std::promise<void> destruction_notifier;
         std::future<void> future = destruction_notifier.get_future();
