@@ -213,7 +213,10 @@ struct UsbFfsConnection : public Connection {
         return true;
     }
 
-    virtual void Start() override final { StartMonitor(); }
+    virtual bool Start() override final {
+        StartMonitor();
+        return true;
+    }
 
     virtual void Stop() override final {
         if (stopped_.exchange(true)) {
@@ -773,7 +776,7 @@ static void usb_ffs_open_thread() {
             LOG(INFO) << "resuming USB";
         }
 
-        atransport* transport = new atransport();
+        atransport* transport = new atransport(kTransportUsb);
         transport->serial = "UsbFfs";
         std::promise<void> destruction_notifier;
         std::future<void> future = destruction_notifier.get_future();
