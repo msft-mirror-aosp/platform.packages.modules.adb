@@ -47,6 +47,7 @@ constexpr size_t LINUX_MAX_SOCKET_SIZE = 4194304;
 #define A_WRTE 0x45545257
 #define A_AUTH 0x48545541
 #define A_STLS 0x534C5453
+std::string command_to_string(uint32_t cmd);
 
 // ADB protocol version.
 // Version revision:
@@ -108,8 +109,8 @@ enum ConnectionState {
     kCsAuthorizing,     // Authorizing with keys from ADB_VENDOR_KEYS.
     kCsUnauthorized,    // ADB_VENDOR_KEYS exhausted, fell back to user prompt.
     kCsNoPerm,          // Insufficient permissions to communicate with the device.
-    kCsDetached,        // USB device that's detached from the adb server.
-    kCsOffline,
+    kCsDetached,        // USB device detached from the adb server (known but not opened/claimed).
+    kCsOffline,         // A peer has been detected (device/host) but no comm has started yet.
 
     // After CNXN packet, the ConnectionState describes not a state but the type of service
     // on the other end of the transport.
