@@ -301,7 +301,7 @@ static void deferred_close(unique_fd fd) {
                 // There's potentially more data to read.
                 auto duration = std::chrono::steady_clock::now() - socket_info->begin;
                 if (duration > 1s) {
-                    LOG(WARNING) << "timeout expired while flushing socket, closing";
+                    LOG(WARNING) << "timeout expired while reading data after flushing socket, closing";
                 } else {
                     return;
                 }
@@ -470,7 +470,7 @@ asocket* create_local_service_socket(std::string_view name, atransport* transpor
     int fd_value = fd.get();
     asocket* s = create_local_socket(std::move(fd));
     s->transport = transport;
-    LOG(VERBOSE) << "LS(" << s->id << "): bound to '" << name << "' via " << fd_value;
+    VLOG(SERVICES) << "LS(" << s->id << "): bound to '" << name << "' via " << fd_value;
 
 #if !ADB_HOST
     if ((name.starts_with("root:") && getuid() != 0 && __android_log_is_debuggable()) ||
