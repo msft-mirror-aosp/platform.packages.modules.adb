@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-#include "adb_unique_fd.h"
-#include "socket.h"
+#pragma once
 
-int init_jdwp();
-asocket* create_jdwp_service_socket();
-asocket* create_jdwp_tracker_service_socket();
-asocket* create_app_tracker_service_socket();
+#include <string>
 
-// Create a socket pair. Send one end to the debuggable process `jdwp_pid` and
-// return the other one.
-unique_fd create_jdwp_connection_fd(int jdwp_pid);
+// Start scanning for emulator on localhost interface
+void init_emulator_scanner(const std::string& addr);
