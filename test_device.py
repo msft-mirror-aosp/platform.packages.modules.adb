@@ -1908,6 +1908,63 @@ class OneDevice(unittest.TestCase):
         invoke("adb",  "-P", self.owner_server_port, "kill-server")
         invoke("adb",  "kill-server")
 
+class Debugger(unittest.TestCase):
+
+    PKG_NAME = "adb.test.app1"
+    PROCESS_NAME = "adb.test.process.name"
+    APP_PORT = "8000"
+    HANDSHAKE = "JDWP-Handshake"
+
+    def test_denied_debugger_on_frozen_app(self):
+        # TODO: Enable once we have a test runner that allows to debug tests.
+        # -> JAVA
+
+        # Install app
+        apk = self.PKG_NAME.replace(".", "_") + ".apk"
+        invoke('adb', 'install', '-r', '-t', apk)
+
+        # Start app
+        target = self.PKG_NAME + '/.MainActivity'
+        invoke('adb', 'shell', 'am', 'start', '-W', target)
+
+        # Assert that debugger is allowed
+        pid = invoke("adb", "shell", "pidof", self.PROCESS_NAME)
+        self.assertTrue(pid.isdigit(), pid)
+        invoke("adb", "forward", "tcp:" + self.APP_PORT, "jdwp:" + pid)
+        # Connect to debugger
+        sock = socket.socket()
+        sock.connect(("localhost", int(self.APP_PORT)))
+        sock.send(self.HANDSHAKE.encode('utf-8'))
+        resp = sock.recv(len(self.HANDSHAKE))
+        self.assertTrue(resp.decode("utf-8") == self.HANDSHAKE)
+        sock.close()
+
+        # Freeze app (adb shell am freeze <APK_NAME>)
+        invoke("adb", "shell", "am", "freeze", self.PROCESS_NAME)
+
+        # Asset that debugger is denied
+        connection_refused = False
+        try:
+            sock = socket.socket()
+            sock.connect(("localhost", int(self.APP_PORT)))
+        except socket.error as e:
+            connection_refused = True
+        self.assertTrue(connection_refused, connection_refused)
+
+        # Unfreeze app (adb shell am unfreeze <APK_NAME>)
+        invoke("adb", "shell", "am", "unfreeze", self.PROCESS_NAME)
+
+        # Assert that debugger is allowed
+        sock = socket.socket()
+        sock.connect(("localhost", int(self.APP_PORT)))
+        sock.send(self.HANDSHAKE.encode("utf-8"))
+        resp = sock.recv(len(self.HANDSHAKE)).decode("utf-8")
+        self.assertTrue(resp == self.HANDSHAKE, resp)
+        sock.close()
+
+    def tearDown(self):
+        invoke("adb", "forward", "--remove-all")
+
 if __name__ == '__main__':
     random.seed(0)
     unittest.main()

@@ -118,6 +118,10 @@ cc_defaults {
         "-UADB_HOST",
         "-DADB_HOST=0",
     ],
+
+    shared_libs: [
+      "libprocessgroup",
+    ],
 }
 
 cc_defaults {
