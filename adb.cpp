@@ -116,6 +116,29 @@ uint32_t calculate_apacket_checksum(const apacket* p) {
     return sum;
 }
 
+std::string command_to_string(uint32_t cmd) {
+    switch (cmd) {
+        case A_SYNC:
+            return "A_SYNC";
+        case A_CNXN:
+            return "A_CNXN";
+        case A_OPEN:
+            return "A_OPEN";
+        case A_OKAY:
+            return "A_OKAY";
+        case A_CLSE:
+            return "A_CLSE";
+        case A_WRTE:
+            return "A_WRTE";
+        case A_AUTH:
+            return "A_AUTH";
+        case A_STLS:
+            return "A_STLS";
+        default:
+            return "UNKNOWN (" + std::to_string(cmd) + ")";
+    }
+}
+
 std::string to_string(ConnectionState state) {
     switch (state) {
         case kCsOffline:
@@ -142,8 +165,8 @@ std::string to_string(ConnectionState state) {
             return "connecting";
         case kCsDetached:
             return "detached";
-        default:
-            return "unknown";
+        case kCsAny:
+            return "any";
     }
 }
 
@@ -176,11 +199,11 @@ void handle_online(atransport *t)
 void handle_offline(atransport *t)
 {
     if (t->GetConnectionState() == kCsOffline) {
-        LOG(INFO) << t->serial_name() << ": already offline";
+        VLOG(ADB) << t->serial_name() << ": already offline";
         return;
     }
 
-    LOG(INFO) << t->serial_name() << ": offline";
+    VLOG(ADB) << t->serial_name() << ": offline";
 
 #if !ADB_HOST && defined(__ANDROID__)
     DecrementActiveConnections();
@@ -512,13 +535,13 @@ void handle_packet(apacket *p, atransport *t)
         s->peer->peer = s;
 
         if (t->SupportsDelayedAck()) {
-            LOG(DEBUG) << "delayed ack available: send buffer = " << send_bytes;
+            VLOG(PACKETS) << "delayed ack available: send buffer = " << send_bytes;
             s->available_send_bytes = send_bytes;
 
             // TODO: Make this adjustable at connection time?
             send_ready(s->id, s->peer->id, t, INITIAL_DELAYED_ACK_BYTES);
         } else {
-            LOG(DEBUG) << "delayed ack unavailable";
+            VLOG(PACKETS) << "delayed ack unavailable";
             send_ready(s->id, s->peer->id, t, 0);
         }
 

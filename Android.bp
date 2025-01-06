@@ -217,6 +217,7 @@ libadb_srcs = [
     "adb_trace.cpp",
     "adb_unique_fd.cpp",
     "adb_utils.cpp",
+    "apacket_reader.cpp",
     "fdevent/fdevent.cpp",
     "services.cpp",
     "sockets.cpp",
@@ -358,10 +359,7 @@ cc_library {
         "//packages/modules/adb:__subpackages__",
     ],
 
-    apex_available: [
-        "com.android.adbd",
-        "test_com.android.adbd",
-    ],
+    apex_available: ["com.android.adbd"],
 }
 
 cc_test_host {
@@ -400,6 +398,24 @@ cc_test_host {
             enabled: true,
             ldflags: ["-municode"],
             shared_libs: ["AdbWinApi"],
+        },
+        // TODO: Create an asan_default rule and use it for adb_asan target
+        // and ALL unit tests.
+        linux: {
+            sanitize: {
+                address: true,
+            },
+            strip: {
+                none: true,
+            },
+        },
+        darwin: {
+            sanitize: {
+                address: true,
+            },
+            strip: {
+                none: true,
+            },
         },
     },
 
@@ -767,14 +783,12 @@ cc_library {
     ],
 }
 
-cc_binary {
-    name: "adbd",
+cc_defaults {
+    name: "adbd_binary_defaults",
     defaults: [
         "adbd_defaults",
-        "host_adbd_supported",
         "libadbd_binary_dependencies",
     ],
-    recovery_available: true,
     min_sdk_version: "30",
     apex_available: ["com.android.adbd"],
 
@@ -805,23 +819,30 @@ cc_binary {
     shared_libs: [
         "libadbd_auth",
     ],
+}
 
+cc_binary {
+    name: "adbd",
+    defaults: [
+        "host_adbd_supported",
+        "adbd_binary_defaults",
+    ],
     target: {
-        recovery: {
-            exclude_shared_libs: [
-                "libadb_pairing_auth",
-                "libadb_pairing_connection",
-            ],
-            exclude_static_libs: [
-                "android_trade_in_mode_flags_cc_lib",
-            ],
-        },
         android: {
             static_libs: [
                 "android_trade_in_mode_flags_cc_lib",
             ],
         },
     },
+}
+
+cc_binary {
+    name: "adbd.recovery",
+    defaults: [
+        "adbd_binary_defaults",
+    ],
+    recovery: true,
+    stem: "adbd",
 }
 
 phony {
