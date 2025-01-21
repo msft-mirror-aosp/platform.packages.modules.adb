@@ -1839,7 +1839,9 @@ class DevicesListing(DeviceTest):
             self.assertFalse(device.model == "")
             self.assertFalse(device.device == "")
             self.assertTrue(device.negotiated_speed == int(device.negotiated_speed))
+            self.assertTrue(int(device.negotiated_speed) != 0)
             self.assertTrue(device.max_speed == int(device.max_speed))
+            self.assertTrue(int(device.max_speed) != 0)
             self.assertTrue(device.transport_id == int(device.transport_id))
 
             proc.terminate()
