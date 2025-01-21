@@ -360,7 +360,7 @@ static unique_fd send_socket_to_process(JdwpProcess& proc) {
     return unique_fd{fds[0]};
 }
 
-unique_fd create_jdwp_connection_fd(int pid) {
+unique_fd create_jdwp_connection_fd(pid_t pid) {
     VLOG(JDWP) << std::format("looking for pid {} in JDWP process list", pid);
 
     for (auto& proc : _jdwp_list) {
@@ -369,7 +369,7 @@ unique_fd create_jdwp_connection_fd(int pid) {
             continue;
         }
 
-        if (proc->process.pid != static_cast<uint64_t>(pid)) {
+        if (static_cast<pid_t>(proc->process.pid) != pid) {
             continue;
         }
 
@@ -584,7 +584,7 @@ asocket* create_jdwp_service_socket() {
     return nullptr;
 }
 
-unique_fd create_jdwp_connection_fd(int pid) {
+unique_fd create_jdwp_connection_fd(pid_t pid) {
     return {};
 }
 
