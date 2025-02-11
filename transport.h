@@ -124,6 +124,8 @@ struct Connection {
     // Stop, and reset the device if it's a USB connection.
     virtual void Reset();
 
+    virtual bool SupportsDetach() const { return false; }
+
     virtual bool Attach(std::string* error) {
         *error = "transport type doesn't support attach";
         return false;
@@ -535,6 +537,7 @@ void send_packet(apacket* p, atransport* t);
 enum TrackerOutputType { SHORT_TEXT, LONG_TEXT, PROTOBUF, TEXT_PROTOBUF };
 asocket* create_device_tracker(TrackerOutputType type);
 std::string list_transports(TrackerOutputType type);
+bool burst_mode_enabled();
 #endif
 
 #endif /* __TRANSPORT_H */
