@@ -399,7 +399,6 @@ class AdbUdpSocket : public UdpSocket {
             return;
         }
 
-        VLOG(MDNS) << "SendMessage ip=" << dest.ToString() << ", size=" << length;
         adb_iovec iov;
         iov.iov_len = length;
         iov.iov_base = const_cast<void*>(data);
@@ -578,7 +577,6 @@ class AdbUdpSocket : public UdpSocket {
             client_->OnRead(this, ChooseError(errno, Error::Code::kSocketReadFailure));
             return;
         }
-        VLOG(MDNS) << "mDNS received bytes=" << *bytes_available;
 
         UdpPacket packet(*bytes_available);
         packet.set_socket(this);
