@@ -17,6 +17,7 @@
 #include "mdns.h"
 
 #include "adb_mdns.h"
+#include "adb_trace.h"
 #include "sysdeps.h"
 
 #include <dns_sd.h>
@@ -105,8 +106,8 @@ static void register_mdns_service(int index, int port, const std::string& servic
     } else {
         mdns_registered[index] = true;
     }
-    LOG(INFO) << "adbd mDNS service " << kADBDNSServices[index]
-            << " registered: " << mdns_registered[index];
+    VLOG(MDNS) << "adbd mDNS service " << kADBDNSServices[index]
+               << " registered: " << mdns_registered[index];
 }
 
 static void unregister_mdns_service(int index) {
@@ -203,7 +204,7 @@ void register_adb_secure_connect_service(int tls_port) {
         if (service_name.empty()) {
             return;
         }
-        LOG(INFO) << "Registering secure_connect service (" << service_name << ")";
+        VLOG(MDNS) << "Registering secure_connect service (" << service_name << ")";
         register_mdns_service(kADBSecureConnectServiceRefIndex, tls_port, service_name);
     }).detach();
 }
